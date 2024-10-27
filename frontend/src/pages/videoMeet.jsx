@@ -55,44 +55,16 @@ export default function VideoMeetComponent() {
 
   let [videos, setVideos] = useState([]);
 
-  // TODO
-  // if(isChrome() === false) {
-
-  // }
-
   useEffect(() => {
-    console.log("HELLO");
     getPermissions();
   }, []);
-
-//  let getDisplayMediaSuccess = (stream)=>{
-//   try{
-//     window.localStream.getTracks().forEach(track => track.stop())
-
-//   }catch(e){ console.log(e)}
-
-//   window.localStream = stream;
-//   localVideoRef.current.srcObject = stream
-
-//   for(let id in connections){
-//     if(id === socketIdRef.current)continue;
-
-//     connections[id].addStream(window.localStream)
-//     connections[id].createOffer().then((description=>[
-//       connections[id].setLocalDescription(description)
-//       .then(()=>{
-//         socketRef.current.emit("signal" , )
-//       })
-//     ]))
-//   }
-//  }
 
   let getDisplayMedia = () => {
     if (screen) {
       if (navigator.mediaDevices.getDisplayMedia) {
         navigator.mediaDevices
           .getDisplayMedia({ video: true, audio: true })
-          .then(getUserMediaSuccess)
+          .then(getDisplayMediaSuccess)
           .then((stream) => {})
           .catch((e) => console.log(e));
       }
@@ -158,6 +130,8 @@ export default function VideoMeetComponent() {
     connectToSocketServer();
   };
 
+  //after getting user media successfully
+
   let getUserMediaSuccess = (stream) => {
     try {
       window.localStream.getTracks().forEach((track) => track.stop());
@@ -181,7 +155,7 @@ export default function VideoMeetComponent() {
             socketRef.current.emit(
               "signal",
               id,
-              JSON.stringify({ "sdp": connections[id].localDescription })
+              JSON.stringify({ sdp: connections[id].localDescription })
             );
           })
           .catch((e) => console.log(e));
@@ -191,11 +165,9 @@ export default function VideoMeetComponent() {
     stream.getTracks().forEach(
       (track) =>
         (track.onended = () => {
-          setVideo(false);
           setAudio(false);
-           
-          // //changes
-          // setScreen(false);
+          setVideo(false);
+
           try {
             let tracks = localVideoRef.current.srcObject.getTracks();
             tracks.forEach((track) => track.stop());
@@ -203,9 +175,9 @@ export default function VideoMeetComponent() {
             console.log(e);
           }
 
-          let blackSilence = (...args) =>
-            new MediaStream([black(...args), silence()]);
+          let blackSilence = () => new MediaStream([black(), silence()]);
           window.localStream = blackSilence();
+          console.log(window.localStream);
           localVideoRef.current.srcObject = window.localStream;
 
           for (let id in connections) {
@@ -228,6 +200,7 @@ export default function VideoMeetComponent() {
     );
   };
 
+  //set localVideo after getting the permission
   let getUserMedia = () => {
     if ((video && videoAvailable) || (audio && audioAvailable)) {
       navigator.mediaDevices
@@ -243,7 +216,8 @@ export default function VideoMeetComponent() {
     }
   };
 
-  let getDislayMediaSuccess = (stream) => {
+  //screen sharing
+  let getDisplayMediaSuccess = (stream) => {
     console.log("here");
     try {
       window.localStream.getTracks().forEach((track) => track.stop());
@@ -285,8 +259,7 @@ export default function VideoMeetComponent() {
             console.log(e);
           }
 
-          let blackSilence = (...args) =>
-            new MediaStream([black(...args), silence()]);
+          let blackSilence = () => new MediaStream([black(), silence()]);
           window.localStream = blackSilence();
           localVideoRef.current.srcObject = window.localStream;
 
@@ -409,8 +382,7 @@ export default function VideoMeetComponent() {
           if (window.localStream !== undefined && window.localStream !== null) {
             connections[socketListId].addStream(window.localStream);
           } else {
-            let blackSilence = (...args) =>
-              new MediaStream([black(...args), silence()]);
+            let blackSilence = () => new MediaStream([black(), silence()]);
             window.localStream = blackSilence();
             connections[socketListId].addStream(window.localStream);
           }
@@ -448,29 +420,27 @@ export default function VideoMeetComponent() {
     let dst = oscillator.connect(ctx.createMediaStreamDestination());
     oscillator.start();
     ctx.resume();
-    return Object.assign(dst.stream.getAudioTracks()[0], { enabled: false });
+    return dst.stream.getAudioTracks()[0];
   };
 
+  console.log("checking silence fn", silence());
 
   let black = ({ width = 640, height = 480 } = {}) => {
-    let canvas = Object.assign(document.createElement("canvas"), {
-      width,
-      height,
-    });
-    canvas.getContext("2d").fillRect(0, 0, width, height);
-    let stream = canvas.captureStream();
-    return Object.assign(stream.getVideoTracks()[0], { enabled: false });
+    let canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    let context = canvas.getContext("2d");
+    context.fillStyle = "black";
+    context.fillRect(0, 0, width, height);
+    return canvas.captureStream().getVideoTracks()[0];
   };
 
+  console.log("checking black fn", black());
 
   let handleVideo = () => {
-    setVideo(!video);
+    setVideo(!video); // Toggle video state
   };
 
-
-  
- 
-  
   let handleAudio = () => {
     setAudio(!audio);
   };
@@ -481,11 +451,9 @@ export default function VideoMeetComponent() {
     }
   }, [screen]);
 
-
   let handleScreen = () => {
     setScreen(!screen);
   };
-
 
   let handleEndCall = () => {
     try {
@@ -519,10 +487,8 @@ export default function VideoMeetComponent() {
   };
 
   let sendMessage = () => {
-    // console.log(socketRef.current);
     socketRef.current.emit("chat-message", message, username);
     setMessage("");
-
   };
 
   let connect = () => {
@@ -572,6 +538,7 @@ export default function VideoMeetComponent() {
                 width: "35%",
                 borderRadius: "10px",
                 marginTop: "1rem",
+                display: "block",
               }}
             ></video>
           </div>
