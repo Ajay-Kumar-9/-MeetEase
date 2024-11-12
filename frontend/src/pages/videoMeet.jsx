@@ -423,7 +423,7 @@ export default function VideoMeetComponent() {
     return dst.stream.getAudioTracks()[0];
   };
 
-  console.log("checking silence fn", silence());
+  // console.log("checking silence fn", silence());
 
   let black = ({ width = 640, height = 480 } = {}) => {
     let canvas = document.createElement("canvas");
@@ -435,7 +435,7 @@ export default function VideoMeetComponent() {
     return canvas.captureStream().getVideoTracks()[0];
   };
 
-  console.log("checking black fn", black());
+  // console.log("checking black fn", black());
 
   let handleVideo = () => {
     setVideo(!video); // Toggle video state
